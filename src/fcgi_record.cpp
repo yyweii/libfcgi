@@ -67,7 +67,7 @@ int FcgiRecordReader::flags() const {
 
 void FcgiRecordReader::params(ParamsVector &vec) const {
   int content_len = content_length();
-  char *next = _buf + _idx + FCGI_HEADER_LEN;
+  unsigned char *next = (unsigned char *)(_buf + _idx + FCGI_HEADER_LEN);
 
   while (0 < content_len) {
     int param_len = 0;
@@ -109,9 +109,9 @@ void FcgiRecordReader::params(ParamsVector &vec) const {
     }
     param_len += param._value_len;
 
-    param._name = next;
+    param._name = (char *)next;
     next += param._name_len;
-    param._value = next;
+    param._value = (char *)next;
     next += param._value_len;
     vec.push_back(param);
 
