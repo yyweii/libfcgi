@@ -74,10 +74,8 @@ bool FcgiRequest::reply(uint32_t code) {
   boost::shared_ptr<FcgiConnection> conn = _conn.lock();
   bool ret = false;
   if (conn != NULL) {
-    ret = conn->reply(request_id(), code);
-    if (!(flags() & FCGI_KEEP_CONN)) {
-      conn->set_close_on_finish_write();
-    }
+    const bool close = !(flags() & FCGI_KEEP_CONN);
+    ret = conn->reply(request_id(), code, close);
   }
   return ret;
 }

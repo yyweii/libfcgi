@@ -57,10 +57,6 @@ void FcgiConnection::close() {
   _sock->close(ec);
 }
 
-void FcgiConnection::set_close_on_finish_write() {
-  _close_on_finish_write = true;
-}
-
 bool FcgiConnection::stdout(int request_id, boost::asio::const_buffers_1 &buf) {
   boost::lock_guard<boost::mutex> guard(_mutex);
 
@@ -83,10 +79,11 @@ bool FcgiConnection::end_stdout(int request_id) {
   return ret;
 }
 
-bool FcgiConnection::reply(int request_id, uint32_t code) {
+bool FcgiConnection::reply(int request_id, uint32_t code, bool close) {
   boost::lock_guard<boost::mutex> guard(_mutex);
 
   bool ret = _writer.reply(request_id, code);
+  _close_on_finish_write = close;
   if (ret && !_has_pending_write) {
     post_async_write();
   }

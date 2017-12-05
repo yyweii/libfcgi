@@ -15,11 +15,10 @@ class FcgiConnection : public boost::enable_shared_from_this<FcgiConnection> {
  public:
   void post_async_read();
   void close();
-  void set_close_on_finish_write();
 
   bool stdout(int request_id, boost::asio::const_buffers_1 &);
   bool end_stdout(int request_id);
-  bool reply(int request_id, uint32_t code);
+  bool reply(int request_id, uint32_t code, bool close);
 
  private:
   void read_handler(const boost::system::error_code &,
