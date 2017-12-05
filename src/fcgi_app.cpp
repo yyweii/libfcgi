@@ -6,6 +6,7 @@
 #include "fcgi_connection.h"
 #include "fcgi_protocol.h"
 #include "fcgi_request.h"
+using namespace boost::asio;
 using namespace boost::asio::ip;
 using namespace boost::system;
 
@@ -42,6 +43,9 @@ void FcgiApp::post_async_accept() {
 
 void FcgiApp::accept_handler(tcp::socket *sock, const error_code &rc) {
   if (!rc) {
+    socket_base::linger option(true, 30);
+    sock->set_option(option);
+
     boost::shared_ptr<FcgiConnection> conn =
         boost::make_shared<FcgiConnection>(sock);
     conn->post_async_read();
