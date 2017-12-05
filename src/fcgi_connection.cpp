@@ -53,7 +53,8 @@ void FcgiConnection::post_async_write() {
 }
 
 void FcgiConnection::close() {
-  if (_sock->is_open()) _sock->close();
+  error_code ec;
+  _sock->close(ec);
 }
 
 void FcgiConnection::set_close_on_finish_write() {
