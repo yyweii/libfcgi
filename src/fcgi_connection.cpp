@@ -57,6 +57,11 @@ void FcgiConnection::close() {
   _sock->close(ec);
 }
 
+void FcgiConnection::shutdown() {
+  error_code ec;
+  _sock->shutdown(tcp::socket::shutdown_both, ec);
+}
+
 bool FcgiConnection::stdout(int request_id, boost::asio::const_buffers_1 &buf) {
   boost::lock_guard<boost::mutex> guard(_mutex);
 
@@ -108,7 +113,6 @@ void FcgiConnection::read_handler(const error_code &rc,
         case ParseRecordError_Multiplex:
         case ParseRecordError_Protocol:
         case ParseRecordError_AbortRequest:
-          close();
           return;
         case ParseRecordError_NotComplete:
           break;
@@ -118,7 +122,6 @@ void FcgiConnection::read_handler(const error_code &rc,
           break;
         default:
           assert(false);
-          close();
           return;
       }
     }
@@ -126,12 +129,10 @@ void FcgiConnection::read_handler(const error_code &rc,
     _reader.clear_complete_record();
 
     if (_reader.buf_full()) {
-      close();
     } else {
       post_async_read();
     }
   } else {
-    close();
   }
 }
 
@@ -141,12 +142,11 @@ void FcgiConnection::write_handler(const error_code &rc,
     boost::lock_guard<boost::mutex> guard(_mutex);
     _writer.transferred(bytes_transferred);
     if (_close_on_finish_write && _writer.buf_empty()) {
-      close();
+      shutdown();
     } else {
       post_async_write();
     }
   } else {
-    close();
   }
 }
 
