@@ -12,6 +12,8 @@ class FcgiRequest {
  public:
   FcgiRequest();
   virtual ~FcgiRequest();
+  FcgiRequest(const FcgiRequest &) = delete;
+  FcgiRequest &operator=(const FcgiRequest &) = delete;
 
  public:
   int request_id() const;

@@ -28,7 +28,7 @@ FcgiApp::~FcgiApp() {
                 [](auto &t) { t.join(); });
   delete _acceptor;
   while (!_queue.empty()) {
-    FcgiRequest *req = _queue.front();
+    auto req = _queue.front();
     _queue.pop();
     delete req;
   }
@@ -39,7 +39,7 @@ void FcgiApp::delete_instance() { delete s_app; }
 FcgiApp *FcgiApp::instance() { return s_app; }
 
 void FcgiApp::post_async_accept() {
-  tcp::socket *sock = new tcp::socket(_io_service);
+  auto sock = new tcp::socket(_io_service);
   _acceptor->async_accept(*sock,
                           std::bind(&FcgiApp::accept_handler, this, sock, _1));
 }
@@ -49,8 +49,7 @@ void FcgiApp::accept_handler(tcp::socket *sock, const error_code &rc) {
     socket_base::linger option(true, 30);
     sock->set_option(option);
 
-    std::shared_ptr<FcgiConnection> conn =
-        std::make_shared<FcgiConnection>(sock);
+    auto conn = std::make_shared<FcgiConnection>(sock);
     conn->post_async_read();
     _connection_num.fetch_add(1, std::memory_order_relaxed);
   }

@@ -16,6 +16,8 @@ class FcgiApp {
  private:
   FcgiApp();
   virtual ~FcgiApp();
+  FcgiApp(const FcgiApp &) = delete;
+  FcgiApp &operator=(const FcgiApp &) = delete;
 
  public:
   static void new_instance();

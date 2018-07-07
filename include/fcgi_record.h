@@ -9,6 +9,8 @@ class FcgiRecordReader {
  public:
   FcgiRecordReader();
   virtual ~FcgiRecordReader();
+  FcgiRecordReader(const FcgiRecordReader &) = delete;
+  FcgiRecordReader &operator=(const FcgiRecordReader &) = delete;
 
  public:
   bool can_read() const;
@@ -45,6 +47,8 @@ class FcgiRecordWriter {
  public:
   FcgiRecordWriter();
   virtual ~FcgiRecordWriter();
+  FcgiRecordWriter(const FcgiRecordWriter &) = delete;
+  FcgiRecordWriter &operator=(const FcgiRecordWriter &) = delete;
 
  public:
   boost::asio::const_buffers_1 buf() const;

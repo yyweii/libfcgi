@@ -12,13 +12,13 @@ void set_sig_handler() {
   sigemptyset(&sa.sa_mask);
   sigaddset(&sa.sa_mask, SIGQUIT);
   sigaddset(&sa.sa_mask, SIGINT);
-  sa.sa_sigaction = NULL;
+  sa.sa_sigaction = nullptr;
   sa.sa_handler = my_sa_handler;
   sa.sa_flags = 0;
-  sa.sa_restorer = NULL;
+  sa.sa_restorer = nullptr;
 
-  sigaction(SIGQUIT, &sa, NULL);
-  sigaction(SIGINT, &sa, NULL);
+  sigaction(SIGQUIT, &sa, nullptr);
+  sigaction(SIGINT, &sa, nullptr);
 }
 
 int main(int, char **) {
@@ -28,8 +28,8 @@ int main(int, char **) {
   FcgiApp::instance()->start(2);
 
   while (!s_stop_process) {
-    FcgiRequest *req = FcgiApp::instance()->pop_request_nonblocking();
-    if (req == NULL) {
+    auto req = FcgiApp::instance()->pop_request_nonblocking();
+    if (req == nullptr) {
       sleep(1);
       continue;
     }

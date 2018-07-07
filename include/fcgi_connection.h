@@ -12,6 +12,8 @@ class FcgiConnection : public std::enable_shared_from_this<FcgiConnection> {
  public:
   FcgiConnection(boost::asio::ip::tcp::socket *);
   virtual ~FcgiConnection();
+  FcgiConnection(const FcgiConnection &) = delete;
+  FcgiConnection &operator=(const FcgiConnection &) = delete;
 
  public:
   void post_async_read();

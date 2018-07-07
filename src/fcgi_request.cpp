@@ -29,7 +29,7 @@ void FcgiRequest::add_params(const ParamsVector &vec) {
 }
 
 bool FcgiRequest::get_param(const char *name, std::string &value) const {
-  ParamsMap::const_iterator it = _params.find(name);
+  auto it = _params.find(name);
   if (it == _params.end()) return false;
   value = it->second;
   return true;
@@ -55,21 +55,21 @@ bool FcgiRequest::stdout(const std::string &str) {
 }
 
 bool FcgiRequest::stdout(const_buffers_1 &buf) {
-  std::shared_ptr<FcgiConnection> conn = _conn.lock();
+  auto conn = _conn.lock();
   bool ret = false;
   if (conn != nullptr) ret = conn->stdout(request_id(), buf);
   return ret;
 }
 
 bool FcgiRequest::end_stdout() {
-  std::shared_ptr<FcgiConnection> conn = _conn.lock();
+  auto conn = _conn.lock();
   bool ret = false;
   if (conn != nullptr) ret = conn->end_stdout(request_id());
   return ret;
 }
 
 bool FcgiRequest::reply(uint32_t code) {
-  std::shared_ptr<FcgiConnection> conn = _conn.lock();
+  auto conn = _conn.lock();
   bool ret = false;
   if (conn != nullptr) {
     const bool close = !(flags() & FCGI_KEEP_CONN);
