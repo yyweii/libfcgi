@@ -1,4 +1,4 @@
-env = Environment(CPPPATH = '#/include', CCFLAGS = '-Wall -Wextra -Werror -g')
+env = Environment(CPPPATH = '#/include', CCFLAGS = '-std=c++17 -Wall -Wextra -Werror -g')
 
 if ARGUMENTS.get('release', 0):
   env['CCFLAGS'] += ' -O2'
@@ -14,8 +14,9 @@ env.SharedLibrary(target = 'lib/fcgi', source = src_files)
 
 link_libs = Split("""
   fcgi
-  boost_system-mt
-  boost_thread-mt
+  boost_system
+  boost_thread
+  pthread
 """)
 
 env.Program(target = 'demo/demo',

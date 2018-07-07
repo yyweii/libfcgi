@@ -22,12 +22,10 @@ void FcgiRequest::set_flags(int flags) { _flags = flags; }
 const ParamsMap &FcgiRequest::params() const { return _params; }
 
 void FcgiRequest::add_params(const ParamsVector &vec) {
-  for (ParamsVector::const_iterator it = vec.begin(); it != vec.end(); ++it) {
-    const FcgiParam &p = *it;
-
+  std::for_each(std::begin(vec), std::end(vec), [this](auto &p) {
     _params[std::string(p._name, p._name_len)] =
         std::string(p._value, p._value_len);
-  }
+  });
 }
 
 bool FcgiRequest::get_param(const char *name, std::string &value) const {
@@ -47,7 +45,7 @@ void FcgiRequest::add_stdin_data(const const_buffer &buf) {
   _stdin += std::string(buffer_cast<const char *>(buf), buffer_size(buf));
 }
 
-void FcgiRequest::set_connection(boost::weak_ptr<FcgiConnection> ptr) {
+void FcgiRequest::set_connection(std::weak_ptr<FcgiConnection> ptr) {
   _conn = ptr;
 }
 
@@ -57,23 +55,23 @@ bool FcgiRequest::stdout(const std::string &str) {
 }
 
 bool FcgiRequest::stdout(const_buffers_1 &buf) {
-  boost::shared_ptr<FcgiConnection> conn = _conn.lock();
+  std::shared_ptr<FcgiConnection> conn = _conn.lock();
   bool ret = false;
-  if (conn != NULL) ret = conn->stdout(request_id(), buf);
+  if (conn != nullptr) ret = conn->stdout(request_id(), buf);
   return ret;
 }
 
 bool FcgiRequest::end_stdout() {
-  boost::shared_ptr<FcgiConnection> conn = _conn.lock();
+  std::shared_ptr<FcgiConnection> conn = _conn.lock();
   bool ret = false;
-  if (conn != NULL) ret = conn->end_stdout(request_id());
+  if (conn != nullptr) ret = conn->end_stdout(request_id());
   return ret;
 }
 
 bool FcgiRequest::reply(uint32_t code) {
-  boost::shared_ptr<FcgiConnection> conn = _conn.lock();
+  std::shared_ptr<FcgiConnection> conn = _conn.lock();
   bool ret = false;
-  if (conn != NULL) {
+  if (conn != nullptr) {
     const bool close = !(flags() & FCGI_KEEP_CONN);
     ret = conn->reply(request_id(), code, close);
   }

@@ -1,13 +1,14 @@
 #ifndef FCGI_APP_H_
 #define FCGI_APP_H_
 
+#include <atomic>
 #include <boost/asio.hpp>
-#include <boost/atomic.hpp>
-#include <boost/thread/condition_variable.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/thread.hpp>
+#include <condition_variable>
+#include <mutex>
 #include <queue>
 #include <string>
+#include <thread>
+#include <vector>
 
 class FcgiRequest;
 
@@ -42,16 +43,16 @@ class FcgiApp {
  private:
   boost::asio::io_service _io_service;
   boost::asio::ip::tcp::acceptor *_acceptor;
-  boost::thread_group _io_thread_group;
+  std::vector<std::thread> _io_thread_group;
 
-  boost::mutex _mutex;
-  boost::condition_variable _cond;
+  std::mutex _mutex;
+  std::condition_variable _cond;
   std::queue<FcgiRequest *> _queue;
 
   int _thread_num;
   int _dequeue_req_num;
   int _enqueue_req_num;
-  boost::atomic<int> _connection_num;
+  std::atomic_int _connection_num;
 
   static FcgiApp *s_app;
 };

@@ -2,12 +2,13 @@
 #define FCGI_CONNECTION_H_
 
 #include <boost/asio.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/thread/mutex.hpp>
+#include <memory>
+#include <mutex>
 #include "fcgi_record.h"
 class FcgiRequest;
+enum class ParseRecordError;
 
-class FcgiConnection : public boost::enable_shared_from_this<FcgiConnection> {
+class FcgiConnection : public std::enable_shared_from_this<FcgiConnection> {
  public:
   FcgiConnection(boost::asio::ip::tcp::socket *);
   virtual ~FcgiConnection();
@@ -29,13 +30,13 @@ class FcgiConnection : public boost::enable_shared_from_this<FcgiConnection> {
                      size_t bytes_transferred);
   void post_async_write();
 
-  int parse_record();
-  int parse_begin_request_record();
-  int parse_abort_request_record();
-  int parse_get_values_record();
-  int parse_params_record();
-  int parse_stdin_record();
-  int parse_data_record();
+  ParseRecordError parse_record();
+  ParseRecordError parse_begin_request_record();
+  ParseRecordError parse_abort_request_record();
+  ParseRecordError parse_get_values_record();
+  ParseRecordError parse_params_record();
+  ParseRecordError parse_stdin_record();
+  ParseRecordError parse_data_record();
 
   int deal_request();
 
@@ -46,7 +47,7 @@ class FcgiConnection : public boost::enable_shared_from_this<FcgiConnection> {
   FcgiRequest *_req;
   bool _has_pending_write;
   bool _close_on_finish_write;
-  boost::mutex _mutex;
+  std::mutex _mutex;
 };
 
 #endif

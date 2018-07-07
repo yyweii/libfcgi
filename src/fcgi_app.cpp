@@ -1,19 +1,21 @@
 #include "fcgi_app.h"
-#include <boost/bind.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/thread/lock_guard.hpp>
+#include <algorithm>
+#include <functional>
+#include <iterator>
+#include <memory>
 #include <sstream>
 #include "fcgi_connection.h"
 #include "fcgi_protocol.h"
 #include "fcgi_request.h"
+using namespace std::placeholders;
 using namespace boost::asio;
 using namespace boost::asio::ip;
 using namespace boost::system;
 
-FcgiApp *FcgiApp::s_app = NULL;
+FcgiApp *FcgiApp::s_app = nullptr;
 
 FcgiApp::FcgiApp()
-    : _acceptor(NULL),
+    : _acceptor(nullptr),
       _thread_num(1),
       _dequeue_req_num(0),
       _enqueue_req_num(0),
@@ -22,7 +24,8 @@ FcgiApp::FcgiApp()
 FcgiApp::~FcgiApp() {
   _acceptor->close();
   _io_service.stop();
-  _io_thread_group.join_all();
+  std::for_each(std::begin(_io_thread_group), std::end(_io_thread_group),
+                [](auto &t) { t.join(); });
   delete _acceptor;
   while (!_queue.empty()) {
     FcgiRequest *req = _queue.front();
@@ -37,8 +40,8 @@ FcgiApp *FcgiApp::instance() { return s_app; }
 
 void FcgiApp::post_async_accept() {
   tcp::socket *sock = new tcp::socket(_io_service);
-  _acceptor->async_accept(
-      *sock, boost::bind(&FcgiApp::accept_handler, this, sock, _1));
+  _acceptor->async_accept(*sock,
+                          std::bind(&FcgiApp::accept_handler, this, sock, _1));
 }
 
 void FcgiApp::accept_handler(tcp::socket *sock, const error_code &rc) {
@@ -46,10 +49,10 @@ void FcgiApp::accept_handler(tcp::socket *sock, const error_code &rc) {
     socket_base::linger option(true, 30);
     sock->set_option(option);
 
-    boost::shared_ptr<FcgiConnection> conn =
-        boost::make_shared<FcgiConnection>(sock);
+    std::shared_ptr<FcgiConnection> conn =
+        std::make_shared<FcgiConnection>(sock);
     conn->post_async_read();
-    ++_connection_num;
+    _connection_num.fetch_add(1, std::memory_order_relaxed);
   }
   post_async_accept();
 }
@@ -57,8 +60,8 @@ void FcgiApp::accept_handler(tcp::socket *sock, const error_code &rc) {
 void FcgiApp::io_function() { _io_service.run(); }
 
 FcgiRequest *FcgiApp::pop_request_blocking() {
-  FcgiRequest *req = NULL;
-  boost::unique_lock<boost::mutex> guard(_mutex);
+  FcgiRequest *req = nullptr;
+  std::unique_lock<std::mutex> guard(_mutex);
   while (_queue.empty()) {
     _cond.wait(guard);
   }
@@ -69,8 +72,8 @@ FcgiRequest *FcgiApp::pop_request_blocking() {
 }
 
 FcgiRequest *FcgiApp::pop_request_nonblocking() {
-  FcgiRequest *req = NULL;
-  boost::unique_lock<boost::mutex> guard(_mutex);
+  FcgiRequest *req = nullptr;
+  std::unique_lock<std::mutex> guard(_mutex);
   if (!_queue.empty()) {
     req = _queue.front();
     _queue.pop();
@@ -81,7 +84,7 @@ FcgiRequest *FcgiApp::pop_request_nonblocking() {
 
 void FcgiApp::push_request(FcgiRequest *req) {
   {
-    boost::unique_lock<boost::mutex> guard(_mutex);
+    std::unique_lock<std::mutex> guard(_mutex);
     _queue.push(req);
     ++_enqueue_req_num;
   }
@@ -95,15 +98,18 @@ void FcgiApp::start(int thread_num) {
   post_async_accept();
 
   _thread_num = thread_num;
-  for (int i = 0; i < thread_num; ++i) {
-    _io_thread_group.create_thread(boost::bind(&FcgiApp::io_function, this));
-  }
+  std::generate_n(
+      std::back_insert_iterator<decltype(_io_thread_group)>(_io_thread_group),
+      _thread_num,
+      [this]() { return std::thread(&FcgiApp::io_function, this); });
 }
 
-void FcgiApp::decrease_connection_num() { --_connection_num; }
+void FcgiApp::decrease_connection_num() {
+  _connection_num.fetch_sub(1, std::memory_order_relaxed);
+}
 
 void FcgiApp::reset_statistics() {
-  boost::unique_lock<boost::mutex> guard(_mutex);
+  std::unique_lock<std::mutex> guard(_mutex);
   _enqueue_req_num = 0;
   _dequeue_req_num = 0;
 }
@@ -111,7 +117,7 @@ void FcgiApp::reset_statistics() {
 std::string FcgiApp::statistics() const {
   std::ostringstream oss;
   oss << "thread_num=" << _thread_num;
-  oss << " connection_num=" << _connection_num;
+  oss << " connection_num=" << _connection_num.load(std::memory_order_relaxed);
   oss << " enqueue_num=" << _enqueue_req_num;
   oss << " dequeue_num=" << _dequeue_req_num;
   return oss.str();

@@ -5,7 +5,7 @@
 #include <vector>
 
 struct FcgiParam {
-  FcgiParam() : _name(NULL), _value(NULL), _name_len(0), _value_len(0) {}
+  FcgiParam() : _name(nullptr), _value(nullptr), _name_len(0), _value_len(0) {}
   FcgiParam(char *n, char *v, int nl, int vl)
       : _name(n), _value(v), _name_len(nl), _value_len(vl) {}
 
@@ -15,8 +15,8 @@ struct FcgiParam {
   int _value_len;
 };
 
-typedef std::vector<FcgiParam> ParamsVector;
+using ParamsVector = std::vector<FcgiParam>;
 
-typedef std::map<std::string, std::string> ParamsMap;
+using ParamsMap = std::map<std::string, std::string>;
 
 #endif

@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <boost/asio/buffer.hpp>
-#include <boost/weak_ptr.hpp>
+#include <memory>
 #include <string>
 #include "fcgi_types.h"
 class FcgiConnection;
@@ -27,7 +27,7 @@ class FcgiRequest {
   const std::string &stdin() const;
   void add_stdin_data(const boost::asio::const_buffer &);
 
-  void set_connection(boost::weak_ptr<FcgiConnection>);
+  void set_connection(std::weak_ptr<FcgiConnection>);
 
   bool stdout(boost::asio::const_buffers_1 &);
   bool stdout(const std::string &);
@@ -35,7 +35,7 @@ class FcgiRequest {
   bool reply(uint32_t code);
 
  private:
-  boost::weak_ptr<FcgiConnection> _conn;
+  std::weak_ptr<FcgiConnection> _conn;
   int _request_id;
   int _role;
   int _flags;
